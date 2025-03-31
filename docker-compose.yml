@@ -2,36 +2,36 @@ version: '3.9'
 
 services:
   db:  # Defines the PostgreSQL database service.
-    image: postgres:16-alpine  # Uses a lightweight Alpine-based PostgreSQL image.
-    container_name: n8n-postgres  # Explicitly set container name for easier identification.
-    restart: unless-stopped  # Restart policy: always unless explicitly stopped.
+    image: postgres:16-alpine
+    container_name: n8n-postgres
+    restart: unless-stopped
     environment:  # Environment variables for PostgreSQL configuration. Reads credentials from .env file.
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=n8n
     volumes:  # Persistent storage for the database.
       - n8n_db_data:/var/lib/postgresql/data
-    ports:  # Expose port (only needed if accessing from outside Docker).  Comment out for better security.
+    ports:
       - "5432:5432"
 
   n8n:  # Defines the n8n application service.
-    image: n8nio/n8n:latest  # Official n8n Docker image.
-    container_name: n8n-app  # Explicitly set container name
-    ports:  # Exposes n8n's UI port.
+    image: n8nio/n8n:latest
+    container_name: n8n-app
+    ports:
       - "5678:5678"
     environment:  # Environment variables for n8n configuration. Reads database and auth settings from .env.
-      - DB_TYPE=postgresdb  # Tells n8n to use PostgreSQL.
-      - DB_POSTGRESDB_HOST=db  # Database host (Docker service name).
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_DATABASE=n8n
       - DB_POSTGRESDB_USER=${POSTGRES_USER}
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
       - N8N_HOST=localhost
       - N8N_PORT=5678
-      - NODE_ENV=production  # Production environment for performance.
-      - N8N_BASIC_AUTH_ACTIVE=true  # Enable user management
-      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}  # Username for n8n UI
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}  # Password for n8n UI
+      - NODE_ENV=production
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
     volumes:  # Persistent storage for n8n data.
       - n8n_data:/home/node/.n8n
     depends_on:  # Specifies that n8n depends on the database service.
