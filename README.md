@@ -59,3 +59,56 @@ Use the username and password you configured in the `.env` file (`N8N_BASIC_AUTH
 *   **Port Conflicts:** If port 5678 or 5432 are already in use on your system, you will need to either stop the conflicting process or change the port mappings in the `docker-compose.yml` file. To change the ports, edit the `ports` section of the `n8n` and `db` services respectively.
 
 *   **n8n UI Not Accessible:** If the n8n UI is not accessible at `http://localhost:5678`, double-check that the n8n container is running correctly (use `docker ps`) and that there are no errors in its logs (use `docker logs n8n-app` or the container name you configured).
+
+## 🚀 Deploying n8n on Render (with Supabase Postgres)
+
+This setup deploys **n8n** on [Render](https://render.com) using a **Supabase-hosted PostgreSQL** database.  
+We skip `docker-compose` and run n8n as a single container with persistent storage and an external DB.
+
+---
+
+### Prerequisites
+- A [Render](https://render.com) account (Starter plan or above recommended for 24/7 uptime)
+- A [Supabase](https://supabase.com) project with **Connection Pooling (pgBouncer)** enabled  
+  _(Dashboard → Project Settings → Database → Connection Pooling)_
+- Your pooled connection string, e.g.:
+  ```
+  postgresql://postgres.<id>@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+  ```
+---
+
+### Dockerfile
+We deploy using the official n8n image. Check `Dockerfile`.
+
+---
+
+### Render Service Setup
+1. Create a **New Web Service** in Render.
+2. Point it to your repo containing the `Dockerfile`.
+3. Set **Environment Variables** check `.env.render.example`
+
+---
+
+### Persistent Storage
+In Render → **Disks**, mount a disk to:
+```
+/home/node/.n8n
+```
+This ensures workflows and local files persist across deploys.
+
+---
+
+### Deploy
+- Click **Create Web Service**.
+- After the build completes, your n8n instance will be live at:
+```
+https://<your-service-name>.onrender.com
+```
+
+---
+
+### Notes
+- Use **pooled** Supabase connections (port `6543`) to avoid hitting connection limits.
+- Avoid `localhost` for `N8N_HOST`; always use `${RENDER_EXTERNAL_HOSTNAME}`.
+- Keep `WEBHOOK_URL` updated so webhooks from external services reach your instance.
+- Free Render services can sleep; for 24/7 webhooks, use a paid plan.
